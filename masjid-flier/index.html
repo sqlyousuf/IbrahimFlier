@@ -424,9 +424,19 @@
     margin-bottom: 3px;
   }
   .flier-tax {
-    font-size: 0.65rem;
-    color: #556688;
+    font-size: 0.72rem;
+    color: #9fb0d8;
     letter-spacing: 0.5px;
+    line-height: 1.4;
+  }
+  .flier-tax .tax-mobile {
+    display: none;
+  }
+  .flier-tax .ein-number {
+    color: var(--gold-light);
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    white-space: nowrap;
   }
 
   /* ===== THEME COLORS for flier ===== */
@@ -442,6 +452,9 @@
     #flier-canvas { width: 100%; }
     .form-panel { width: 100%; }
     .flier-title { font-size: 1.7rem; }
+    .flier-tax { font-size: 0.8rem; }
+    .flier-tax .tax-desktop { display: none; }
+    .flier-tax .tax-mobile { display: inline; }
   }
 </style>
 </head>
@@ -626,7 +639,10 @@
         <div class="flier-footer">
           <div class="flier-address">📍 5500 FM 2920 Rd, Spring, TX 77388</div>
           <div class="flier-address">🌐 masjidibrahimspring.org</div>
-          <div class="flier-tax">American Waqf Foundation is a 501(c)(3) nonprofit (EIN: 84-2645759), Spring, TX. Donations are tax-deductible.</div>
+          <div class="flier-tax">
+            <span class="tax-desktop">American Waqf Foundation is a 501(c)(3) nonprofit (EIN: <span class="ein-number">84-2645759</span>), Spring, TX. Donations are tax-deductible.</span>
+            <span class="tax-mobile">501(c)(3) nonprofit • EIN: <span class="ein-number">84-2645759</span> • Tax-deductible.</span>
+          </div>
         </div>
 
       </div>
