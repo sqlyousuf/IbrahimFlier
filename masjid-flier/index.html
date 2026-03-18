@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="format-detection" content="telephone=no, date=no, email=no, address=no">
 <title>Masjid Ibrahim — Flier Generator</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Lato:wght@300;400;700&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
@@ -450,8 +451,16 @@
     font-weight: 700;
   }
   .flier-tax-ein {
-    color: #ffffff;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff;
     font-weight: 700;
+    text-decoration: none;
+  }
+  a[x-apple-data-detectors],
+  .flier-tax-ein a {
+    color: inherit !important;
+    text-decoration: none !important;
+    font-weight: inherit !important;
   }
 
   /* ===== THEME COLORS for flier ===== */
@@ -654,7 +663,7 @@
         <div class="flier-footer">
           <div class="flier-address">📍 5500 FM 2920 Rd, Spring, TX 77388</div>
           <div class="flier-address">🌐 masjidibrahimspring.org</div>
-          <div class="flier-tax"><span class="flier-tax-highlight">American Waqf Foundation</span> is a 501(c)(3) nonprofit (EIN: <span class="flier-tax-ein">84-2645759</span>), Spring, TX. Donations are tax-deductible.</div>
+          <div class="flier-tax"><span class="flier-tax-highlight">American Waqf Foundation</span> is a 501(c)(3) nonprofit (EIN: <span class="flier-tax-ein" x-apple-data-detectors="false">84-2645759</span>), Spring, TX. Donations are tax-deductible.</div>
         </div>
 
       </div>
