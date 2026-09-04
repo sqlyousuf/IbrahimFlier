@@ -1,6 +1,6 @@
 # Masjid Ibrahim — Flier Studio
 
-A single-page flier generator for Masjid Ibrahim, Klein Islamic Center, Spring TX.
+A single-page flier generator for Masjid Ibrahim, Spring TX.
 Fill in the event on the left, watch the flier build on the right, then export a
 print-quality PNG or a PDF.
 
