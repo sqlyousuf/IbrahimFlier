@@ -165,7 +165,8 @@
   .btn-ghost:hover { color: var(--ui-text); border-color: var(--gold); }
 
   /* ===== PREVIEW ===== */
-  .preview { position: sticky; top: 34px; }
+  /* only pin the preview when the whole flier fits on screen, or its bottom gets hidden */
+  .preview.pinned { position: sticky; top: 34px; }
   .preview-bar {
     display: flex; align-items: center; justify-content: space-between;
     margin-bottom: 15px; padding: 0 2px;
@@ -361,7 +362,7 @@
 
   @media (max-width: 1000px) {
     .layout { grid-template-columns: minmax(0, 1fr); max-width: 480px; }
-    .preview { position: static; }
+    .preview.pinned { position: static; }
   }
   @media (max-width: 520px) {
     body { padding: 26px 14px 54px; }
@@ -468,8 +469,7 @@
     <div class="swatches" id="swatches"></div>
 
     <div class="actions">
-      <button type="button" class="btn btn-gold"  id="downloadBtn" onclick="downloadFlier()">Download PNG</button>
-      <button type="button" class="btn btn-ghost" id="printBtn"    onclick="printFlier()">Save as PDF / Print</button>
+      <button type="button" class="btn btn-gold" id="shareBtn" onclick="shareFlier()">Share Flier</button>
     </div>
   </form>
 
@@ -627,6 +627,7 @@ function alpha(hex, a) {
 
 function applyTheme(t) {
   theme = t;
+  clearReady();
   const f = document.getElementById('flier');
   const set = function (k, v) { f.style.setProperty(k, v); };
   set('--bg1', t.bg1);
@@ -758,30 +759,28 @@ function slug() {
   return t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'flier';
 }
 
-function downloadFlier() {
-  const btn = $('downloadBtn');
-  const label = btn.textContent;
+/* render the flier at full size, whatever the preview scale or page scroll */
+function renderFlier() {
   const stage = $('stage');
-  const prevTransform = stage.style.transform;
-  const prevHeight = stage.style.height;
-  btn.disabled = true;
-  btn.textContent = 'Rendering…';
-
+  const f = $('flier');
+  const prev = { t: stage.style.transform, h: stage.style.height, j: stage.style.justifyContent };
   const restore = function () {
-    stage.style.transform = prevTransform;
-    stage.style.height = prevHeight;
-    btn.disabled = false;
-    btn.textContent = label;
+    stage.style.transform = prev.t;
+    stage.style.height = prev.h;
+    stage.style.justifyContent = prev.j;
   };
 
-  loadHtml2Canvas()
+  return loadHtml2Canvas()
     .then(assetsReady)
     .then(function () {
-      /* capture at full size, never at the fitted preview scale */
       stage.style.transform = 'none';
       stage.style.height = '';
-      return html2canvas($('flier'), {
+      stage.style.justifyContent = 'flex-start';   /* never let it hang off the left edge */
+      return html2canvas(f, {
         scale: 3,
+        width:  f.offsetWidth,
+        height: f.offsetHeight,
+        windowHeight: Math.max(document.documentElement.scrollHeight, window.innerHeight),
         useCORS: true,
         allowTaint: true,
         logging: false,
@@ -791,38 +790,69 @@ function downloadFlier() {
       });
     })
     .then(function (canvas) {
-      const a = document.createElement('a');
-      a.download = slug() + '.png';
-      a.href = canvas.toDataURL('image/png', 1.0);
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
       restore();
+      return new Promise(function (resolve) { canvas.toBlob(resolve, 'image/png'); });
+    }, function (err) { restore(); throw err; });
+}
+
+let readyFile = null;   /* rendered but not yet shared, e.g. after the tap expired */
+
+function clearReady() {
+  if (!readyFile) return;
+  readyFile = null;
+  $('shareBtn').textContent = 'Share Flier';
+}
+
+function saveFile(file) {
+  const a = document.createElement('a');
+  a.download = file.name;
+  a.href = URL.createObjectURL(file);
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+}
+
+function sendFile(file) {
+  const btn = $('shareBtn');
+  const data = { files: [file], title: val('eventTitle') || 'Masjid Ibrahim' };
+  if (!(navigator.canShare && navigator.canShare(data))) {
+    saveFile(file);   /* desktop browsers without file sharing */
+    readyFile = null;
+    btn.textContent = 'Share Flier';
+    return Promise.resolve();
+  }
+  return navigator.share(data).then(function () {
+    readyFile = null;
+    btn.textContent = 'Share Flier';
+  }, function (err) {
+    if (err && err.name === 'NotAllowedError') {
+      /* rendering took longer than the browser allows after a tap */
+      readyFile = file;
+      btn.textContent = 'Ready — tap to share';
+    } else {
+      readyFile = null;
+      btn.textContent = 'Share Flier';
+    }
+  });
+}
+
+function shareFlier() {
+  const btn = $('shareBtn');
+  if (readyFile) { sendFile(readyFile); return; }
+  btn.disabled = true;
+  btn.textContent = 'Preparing…';
+  renderFlier()
+    .then(function (blob) {
+      btn.disabled = false;
+      return sendFile(new File([blob], slug() + '.png', { type: 'image/png' }));
     })
     .catch(function (err) {
       console.error(err);
-      restore();
-      printFlier();   /* graceful fallback */
+      btn.disabled = false;
+      btn.textContent = 'Share Flier';
+      alert('Sorry, the flier could not be prepared. Please try again.');
     });
-}
-
-function printFlier() {
-  const w = window.open('', '_blank');
-  if (!w) { alert('Please allow pop-ups to print or save as PDF.'); return; }
-  const styles = Array.prototype.slice
-    .call(document.querySelectorAll('style, link[rel="stylesheet"]'))
-    .map(function (n) { return n.outerHTML; }).join('');
-  w.document.write(
-    '<!DOCTYPE html><html><head><meta charset="utf-8">' + styles +
-    '<style>@page{margin:0;size:460px auto}' +
-    'body{margin:0;padding:0;background:#fff}' +
-    '#flier{box-shadow:none;border-radius:0}</style></head><body>' +
-    $('flier').outerHTML + '</body></html>'
-  );
-  w.document.close();
-  w.focus();
-  const go = function () { setTimeout(function () { w.print(); }, 350); };
-  if (w.document.fonts) w.document.fonts.ready.then(go); else setTimeout(go, 700);
 }
 
 /* ============================================================
@@ -838,6 +868,8 @@ function fitStage() {
     stage.style.transform = 'scale(' + scale + ')';
     stage.style.height = ($('flier').offsetHeight * scale) + 'px';
   }
+  const preview = stage.closest('.preview');
+  preview.classList.toggle('pinned', preview.offsetHeight + 34 <= window.innerHeight);
 }
 
 /* ============================================================
@@ -876,6 +908,8 @@ function init() {
     new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 
   $('controls').addEventListener('input', updatePreview);
+  $('controls').addEventListener('input', clearReady);
+  $('controls').addEventListener('change', clearReady);
   $('enableDate2').addEventListener('change', function (e) {
     show($('date2Group'), e.target.checked);
     if (!e.target.checked) $('eventDate2').value = '';

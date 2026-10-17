@@ -1,8 +1,8 @@
 # Masjid Ibrahim — Flier Studio
 
 A single-page flier generator for Masjid Ibrahim, Spring TX.
-Fill in the event on the left, watch the flier build on the right, then export a
-print-quality PNG or a PDF.
+Fill in the event on the left, watch the flier build on the right, then share it
+as a print-quality PNG.
 
 ## Usage
 
@@ -14,8 +14,8 @@ print-quality PNG or a PDF.
   and each timing gets its own speaker line.
 - Six **palettes** are available — five dark grounds and one ivory. The logo,
   hairlines, and background texture all re-ink themselves to match.
-- **Download PNG** exports at 3× (1380 px wide). **Save as PDF / Print** opens the
-  flier alone in a print window.
+- **Share Flier** renders a 3× PNG (1380 px wide) and opens the phone's share sheet
+  (WhatsApp, Messages, etc.). Browsers that can't share files save the PNG instead.
 
 ## Layout
 
@@ -40,7 +40,7 @@ masjid-flier/
 `index.html` carries its images as base64 rather than linking them. That is
 deliberate: `html2canvas` renders the export through a `<canvas>`, and an image
 loaded over `file://` or from another origin would either taint the canvas or
-fail outright. Inlining keeps **Download PNG** working when the page is opened
+fail outright. Inlining keeps **Share Flier** working when the page is opened
 straight off disk.
 
 The logo is stored once, as a **greyscale alpha mask**. At load the page reads
